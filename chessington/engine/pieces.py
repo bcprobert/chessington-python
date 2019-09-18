@@ -37,6 +37,7 @@ class Pawn(Piece):
     """
     A class representing a chess pawn.
     """
+
     def is_at_starting_position(self, board):
         start_positions = {Player.WHITE: 1, Player.BLACK: 6}
         return start_positions[self.player] == self.position(board).row
@@ -46,7 +47,7 @@ class Pawn(Piece):
         return board_edges[self.player] == self.position(board).row
 
     def capture_enemies(self, current_square, direction, board, valid_moves):
-        if current_square.col in range(1, 7) and current_square.row + 1 < 7 and current_square.row - 1 > 0:
+        if current_square.col in range(1, 7) and 7 > current_square.row > 0:
             enemy_square_left = Square.at(current_square.row + direction, current_square.col - abs(direction))
             enemy_square_right = Square.at(current_square.row + direction, current_square.col + abs(direction))
 
@@ -111,7 +112,28 @@ class Rook(Piece):
     """
 
     def get_available_moves(self, board):
-        return []
+        valid_moves = []
+        current_square = self.position(board)
+        direction = 1 if self.player == Player.WHITE else -1
+
+        if board.is_in_bounds(current_square):
+            for i in range(current_square.row, 7):
+                next_square_up = Square.at(current_square.row + i * direction, current_square.col)
+                next_square_down = Square.at(current_square.row - i * direction, current_square.col)
+                next_square_left = Square.at(current_square.row, current_square.col - i * direction)
+                next_square_right = Square.at(current_square.row, current_square.col + i * direction)
+
+                if board.is_square_empty(next_square_up) and board.is_in_bounds(next_square_up):
+                    valid_moves.append(next_square_up)
+                if board.is_square_empty(next_square_down) and board.is_in_bounds(next_square_down):
+                    valid_moves.append(next_square_down)
+                if board.is_square_empty(next_square_left) and board.is_in_bounds(next_square_left):
+                    valid_moves.append(next_square_left)
+                if board.is_square_empty(next_square_right) and board.is_in_bounds(next_square_right):
+                    valid_moves.append(next_square_right)
+                else:
+                    return []
+        return valid_moves
 
 
 class Queen(Piece):

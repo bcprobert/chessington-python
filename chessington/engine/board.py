@@ -11,6 +11,7 @@ from chessington.engine.pieces import Pawn, Knight, Bishop, Rook, Queen, King
 
 BOARD_SIZE = 8
 
+
 class Board:
     """
     A representation of the chess board, and the pieces on it.
@@ -63,6 +64,9 @@ class Board:
 
     def is_square_empty(self, square):
         return self.get_piece(square) is None
+
+    def is_in_bounds(self, square):
+        return 7 >= square.row >= 0, 7 >= square.col >= 0
 
     def find_piece(self, piece_to_find):
         """
