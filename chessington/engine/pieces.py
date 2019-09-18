@@ -41,12 +41,19 @@ class Pawn(Piece):
         start_positions = {Player.WHITE: 1, Player.BLACK: 6}
         return start_positions[self.player] == self.position(board).row
 
+    def is_at_edge_of_board(self, board):
+        board_edges = {Player.WHITE: 7, Player.BLACK: 0}
+        return board_edges[self.player] == self.position(board).row
+
     def get_available_moves(self, board):
         current_square = self.position(board)
         direction = 1 if self.player == Player.WHITE else -1
 
         valid_moves = []
         next_square = Square.at(current_square.row + direction, current_square.col)
+
+        if self.is_at_edge_of_board(board):
+            return []
 
         if board.is_square_empty(next_square):
             valid_moves.append(next_square)
