@@ -45,12 +45,36 @@ class Pawn(Piece):
         board_edges = {Player.WHITE: 7, Player.BLACK: 0}
         return board_edges[self.player] == self.position(board).row
 
+    def capture_enemies(self, current_square, direction, board, valid_moves):
+        if current_square.col in range(1, 7) and current_square.row + 1 < 7 and current_square.row - 1 > 0:
+            enemy_square_left = Square.at(current_square.row + direction, current_square.col - abs(direction))
+            enemy_square_right = Square.at(current_square.row + direction, current_square.col + abs(direction))
+
+            enemy_piece_left = board.get_piece(enemy_square_left)
+            enemy_piece_right = board.get_piece(enemy_square_right)
+
+            if enemy_piece_left is not None:
+                enemy_colour_left = enemy_piece_left.player
+                if enemy_colour_left != self.player:
+                    valid_moves.append(enemy_square_left)
+
+            if enemy_piece_right is not None:
+                enemy_colour_right = enemy_piece_right.player
+                if enemy_colour_right != self.player:
+                    valid_moves.append(enemy_square_right)
+
     def get_available_moves(self, board):
+        valid_moves = []
         current_square = self.position(board)
         direction = 1 if self.player == Player.WHITE else -1
-
-        valid_moves = []
         next_square = Square.at(current_square.row + direction, current_square.col)
+
+        self.capture_enemies(current_square, direction, board, valid_moves)
+
+        if self.is_at_starting_position(board):
+            double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
+            if board.is_square_empty(double_step_square):
+                valid_moves.append(double_step_square)
 
         if self.is_at_edge_of_board(board):
             return []
@@ -59,11 +83,6 @@ class Pawn(Piece):
             valid_moves.append(next_square)
         else:
             return []
-
-        if self.is_at_starting_position(board):
-            double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
-            if board.is_square_empty(double_step_square):
-                valid_moves.append(double_step_square)
 
         return valid_moves
 
