@@ -37,20 +37,28 @@ class Pawn(Piece):
     """
     A class representing a chess pawn.
     """
+    def is_at_starting_position(self, board):
+        start_positions = {Player.WHITE: 1, Player.BLACK: 6}
+        return start_positions[self.player] == self.position(board).row
 
     def get_available_moves(self, board):
         current_square = self.position(board)
-        next_square = []
-        if self.player == Player.WHITE:
-            next_square.append(Square.at(current_square.row + 1, current_square.col))
-            if current_square.row == 1:
-                next_square.append(Square.at(current_square.row + 2, current_square.col))
-        elif self.player == Player.BLACK:
-            next_square.append(Square.at(current_square.row - 1, current_square.col))
-            if current_square.row == 6:
-                next_square.append(Square.at(current_square.row - 2, current_square.col))
+        direction = 1 if self.player == Player.WHITE else -1
 
-        return next_square
+        valid_moves = []
+        next_square = Square.at(current_square.row + direction, current_square.col)
+
+        if board.is_square_empty(next_square):
+            valid_moves.append(next_square)
+        else:
+            return []
+
+        if self.is_at_starting_position(board):
+            double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
+            if board.is_square_empty(double_step_square):
+                valid_moves.append(double_step_square)
+
+        return valid_moves
 
 
 class Knight(Piece):
