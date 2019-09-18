@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 from chessington.engine.data import Player, Square
 
+
 class Piece(ABC):
     """
     An abstract base class from which all pieces inherit.
@@ -28,6 +29,9 @@ class Piece(ABC):
         current_square = board.find_piece(self)
         board.move_piece(current_square, new_square)
 
+    def position(self, board):
+        return board.find_piece(self)
+
 
 class Pawn(Piece):
     """
@@ -35,7 +39,7 @@ class Pawn(Piece):
     """
 
     def get_available_moves(self, board):
-        current_square = board.find_piece(self)
+        current_square = self.position(board)
         direction = 1 if self.player == Player.WHITE else -1
         next_square = Square.at(current_square.row + direction, current_square.col)
         return [next_square]
