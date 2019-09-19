@@ -35,6 +35,27 @@ class Piece(ABC):
         """
         return board.find_piece(self)
 
+    def get_moves_in_direction(self, board, direction):
+        valid_moves = []
+        distance = 1
+        start_position = self.position(board)
+
+        while True:
+            move_vector = (direction[0] * distance, direction[1] * distance)
+            candidate_position = start_position.translate_by(move_vector)
+            if candidate_position.is_on_board():
+                if board.is_square_empty(candidate_position):
+                    valid_moves.append(candidate_position)
+                    distance += 1
+                elif board.capture_possible(start_position, candidate_position):
+                    valid_moves.append(candidate_position)
+                    break
+                else:
+                    break
+            else:
+                break
+        return valid_moves
+
 
 class Pawn(Piece):
     """
@@ -128,21 +149,6 @@ class Knight(Piece):
         right_moves = self.get_moves_in_direction(board, right)
         return left_moves + right_moves
 
-    def get_moves_in_direction(self, board, direction):
-        valid_moves = []
-        distance = 1
-        start_position = self.position(board)
-
-        move_vector = (direction[0] * distance, direction[1] * distance)
-        candidate_position = start_position.translate_by(move_vector)
-        if candidate_position.is_on_board():
-            if board.is_square_empty(candidate_position):
-                valid_moves.append(candidate_position)
-            elif board.capture_possible(start_position, candidate_position):
-                valid_moves.append(candidate_position)
-
-        return valid_moves
-
 
 class Bishop(Piece):
     """
@@ -167,27 +173,6 @@ class Bishop(Piece):
         right = (-1, 1)
         right_moves = self.get_moves_in_direction(board, right)
         return left_moves + right_moves
-
-    def get_moves_in_direction(self, board, direction):
-        valid_moves = []
-        distance = 1
-        start_position = self.position(board)
-
-        while True:
-            move_vector = (direction[0] * distance, direction[1] * distance)
-            candidate_position = start_position.translate_by(move_vector)
-            if candidate_position.is_on_board():
-                if board.is_square_empty(candidate_position):
-                    valid_moves.append(candidate_position)
-                    distance += 1
-                elif board.capture_possible(start_position, candidate_position):
-                    valid_moves.append(candidate_position)
-                    break
-                else:
-                    break
-            else:
-                break
-        return valid_moves
 
 
 class Rook(Piece):
@@ -214,27 +199,6 @@ class Rook(Piece):
         down_moves = self.get_moves_in_direction(board, left)
         return up_moves + down_moves
 
-    def get_moves_in_direction(self, board, direction):
-        valid_moves = []
-        distance = 1
-        start_position = self.position(board)
-
-        while True:
-            move_vector = (direction[0] * distance, direction[1] * distance)
-            candidate_position = start_position.translate_by(move_vector)
-            if candidate_position.is_on_board():
-                if board.is_square_empty(candidate_position):
-                    valid_moves.append(candidate_position)
-                    distance += 1
-                elif board.capture_possible(start_position, candidate_position):
-                    valid_moves.append(candidate_position)
-                    break
-                else:
-                    break
-            else:
-                break
-        return valid_moves
-
 
 class Queen(Piece):
     """
@@ -242,7 +206,39 @@ class Queen(Piece):
     """
 
     def get_available_moves(self, board):
-        return []
+        valid_moves = self.get_vertical_moves(board)
+        valid_moves += self.get_horizontal_moves(board)
+        valid_moves += self.get_forward_moves(board)
+        valid_moves += self.get_backward_moves(board)
+        return valid_moves
+
+    def get_forward_moves(self, board):
+        left = (1, -1)
+        left_moves = self.get_moves_in_direction(board, left)
+        right = (1, 1)
+        right_moves = self.get_moves_in_direction(board, right)
+        return left_moves + right_moves
+
+    def get_backward_moves(self, board):
+        left = (-1, -1)
+        left_moves = self.get_moves_in_direction(board, left)
+        right = (-1, 1)
+        right_moves = self.get_moves_in_direction(board, right)
+        return left_moves + right_moves
+
+    def get_vertical_moves(self, board):
+        up = (1, 0)
+        up_moves = self.get_moves_in_direction(board, up)
+        down = (-1, 0)
+        down_moves = self.get_moves_in_direction(board, down)
+        return up_moves + down_moves
+
+    def get_horizontal_moves(self, board):
+        right = (0, 1)
+        up_moves = self.get_moves_in_direction(board, right)
+        left = (0, -1)
+        down_moves = self.get_moves_in_direction(board, left)
+        return up_moves + down_moves
 
 
 class King(Piece):
