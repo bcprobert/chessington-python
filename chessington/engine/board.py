@@ -20,6 +20,7 @@ class Board:
     def __init__(self, player, board_state):
         self.current_player = Player.WHITE
         self.board = board_state
+        self.en_passant_state = None
 
     @staticmethod
     def empty():
@@ -63,6 +64,9 @@ class Board:
         return self.board[square.row][square.col]
 
     def is_square_empty(self, square):
+        """
+        Checks if a square is empty.
+        """
         return self.get_piece(square) is None
 
     def find_piece(self, piece_to_find):
@@ -77,15 +81,37 @@ class Board:
 
     def move_piece(self, from_square, to_square):
         """
-        Moves the piece from the given starting square to the given destination square.
+        Moves the piece from the given starting square to the given destination square. Also checks for pawn promotion.
         """
         moving_piece = self.get_piece(from_square)
         if moving_piece is not None and moving_piece.player == self.current_player:
+            if isinstance(moving_piece, Pawn) and (to_square.row == 0 or to_square.row == 7):
+                moving_piece = Queen(self.current_player)
             self.set_piece(to_square, moving_piece)
             self.set_piece(from_square, None)
+            self.en_passant_deletion(moving_piece, to_square, from_square)
+            self.set_en_passant_state(to_square, from_square, moving_piece)
             self.current_player = self.current_player.opponent()
 
+    def en_passant_deletion(self, moving_piece, to_square, from_square):
+        if not isinstance(moving_piece, Pawn):
+            return
+        if moving_piece.enpassant_truefalse(self, to_square):
+            self.set_piece(self.en_passant_state, None)
+
+    def set_en_passant_state(self, to_square, from_square, moving_piece):
+        if not isinstance(moving_piece, Pawn):
+            self.en_passant_state = None
+            return
+        if abs(to_square.row - from_square.row) == 2:
+            self.en_passant_state = to_square
+            return
+        self.en_passant_state = None
+
     def capture_possible(self, current_position, candidate_position):
+        """
+        Checks if a piece is on the opposition team.
+        """
         if self.get_piece(current_position).player != self.get_piece(candidate_position).player:
             return True
         return False

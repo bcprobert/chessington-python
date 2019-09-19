@@ -14,6 +14,7 @@ class Piece(ABC):
 
     def __init__(self, player):
         self.player = player
+        self.counter = 0
 
     @abstractmethod
     def get_available_moves(self, board):
@@ -84,10 +85,9 @@ class Pawn(Piece):
         start_positions = {Player.WHITE: 1, Player.BLACK: 6}
         return start_positions[self.player] == self.position(board).row
 
-    @staticmethod
-    def capture_enemies(current_square, candidate_square, direction, board):
+    def capture_enemies(self, current_square, candidate_square, direction, board):
         """
-        Checks if the pawn can capture an enemy piece.
+        Checks if the pawn can capture an enemy piece, including via en passant.
         """
         valid_moves = []
 
@@ -95,12 +95,24 @@ class Pawn(Piece):
             if not board.is_square_empty(candidate_square):
                 if board.capture_possible(current_square, candidate_square):
                     valid_moves.append(Square.at(candidate_square.row, candidate_square.col))
+            elif self.enpassant_truefalse(board, candidate_square):
+                valid_moves.append(candidate_square)
 
         return valid_moves
 
+    def enpassant_truefalse(self, board, to_square):
+        """
+        Checks if en passant has happened this turn.
+        """
+        if board.en_passant_state is not None:
+            colour_check = -1 if self.player == Player.WHITE else 1
+            if board.en_passant_state.col == to_square.col and board.en_passant_state.row - to_square.row == colour_check:
+                return True
+        return False
+
     def get_available_moves(self, board):
         """
-        Finds moves available to the pawn
+        Finds moves available to the pawn.
         """
         valid_moves = []
         current_square = self.position(board)
@@ -109,6 +121,7 @@ class Pawn(Piece):
 
         candidate_square = Square.at(current_square.row + direction, current_square.col - abs(direction))
         valid_moves += self.capture_enemies(current_square, candidate_square, direction, board)
+
         candidate_square = Square.at(current_square.row + direction, current_square.col + abs(direction))
         valid_moves += self.capture_enemies(current_square, candidate_square, direction, board)
 
@@ -133,7 +146,7 @@ class Knight(Piece):
         valid_moves = self.get_forward_horizontal_moves(board)
         valid_moves += self.get_backward_horizontal_moves(board)
         valid_moves += self.get_forward_vertical_moves(board)
-        valid_moves += self. get_backward_vertical_moves(board)
+        valid_moves += self.get_backward_vertical_moves(board)
         return valid_moves
 
     def get_forward_horizontal_moves(self, board):
