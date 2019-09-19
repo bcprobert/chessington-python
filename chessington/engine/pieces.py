@@ -113,7 +113,7 @@ class Pawn(Piece):
         valid_moves += self.capture_enemies(current_square, candidate_square, direction, board)
 
         if current_square.is_on_board() and next_square.is_on_board():
-            if self.is_at_starting_position(board):
+            if self.is_at_starting_position(board) and board.is_square_empty(next_square):
                 double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
                 if board.is_square_empty(double_step_square):
                     valid_moves.append(double_step_square)
