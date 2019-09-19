@@ -30,6 +30,9 @@ class Piece(ABC):
         board.move_piece(current_square, new_square)
 
     def position(self, board):
+        """
+        Finds the position of the piece on the board. The piece will now know where it is.
+        """
         return board.find_piece(self)
 
 
@@ -39,51 +42,49 @@ class Pawn(Piece):
     """
 
     def is_at_starting_position(self, board):
+        """
+        Checks if the pawn is at its starting position as other moves are available if it is.
+        """
         start_positions = {Player.WHITE: 1, Player.BLACK: 6}
         return start_positions[self.player] == self.position(board).row
 
-    def is_at_edge_of_board(self, board):
-        board_edges = {Player.WHITE: 7, Player.BLACK: 0}
-        return board_edges[self.player] == self.position(board).row
+    @staticmethod
+    def capture_enemies(current_square, candidate_square, direction, board):
+        """
+        Checks if the pawn can capture an enemy piece.
+        """
+        valid_moves = []
 
-    def capture_enemies(self, current_square, direction, board, valid_moves):
-        if current_square.col in range(1, 7) and 7 > current_square.row > 0:
-            enemy_square_left = Square.at(current_square.row + direction, current_square.col - abs(direction))
-            enemy_square_right = Square.at(current_square.row + direction, current_square.col + abs(direction))
+        if current_square.is_on_board() and candidate_square.is_on_board():
+            if not board.is_square_empty(candidate_square):
+                if board.capture_possible(current_square, candidate_square):
+                    valid_moves.append(Square.at(candidate_square.row, candidate_square.col))
 
-            enemy_piece_left = board.get_piece(enemy_square_left)
-            enemy_piece_right = board.get_piece(enemy_square_right)
-
-            if enemy_piece_left is not None:
-                enemy_colour_left = enemy_piece_left.player
-                if enemy_colour_left != self.player:
-                    valid_moves.append(enemy_square_left)
-
-            if enemy_piece_right is not None:
-                enemy_colour_right = enemy_piece_right.player
-                if enemy_colour_right != self.player:
-                    valid_moves.append(enemy_square_right)
+        return valid_moves
 
     def get_available_moves(self, board):
+        """
+        Finds moves available to the pawn
+        """
         valid_moves = []
         current_square = self.position(board)
         direction = 1 if self.player == Player.WHITE else -1
         next_square = Square.at(current_square.row + direction, current_square.col)
 
-        self.capture_enemies(current_square, direction, board, valid_moves)
+        if current_square.is_on_board():
+            if self.is_at_starting_position(board):
+                double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
+                if board.is_square_empty(double_step_square):
+                    valid_moves.append(double_step_square)
 
-        if self.is_at_starting_position(board):
-            double_step_square = Square.at(current_square.row + 2 * direction, current_square.col)
-            if board.is_square_empty(double_step_square):
-                valid_moves.append(double_step_square)
-
-        if self.is_at_edge_of_board(board):
-            return []
-
-        if board.is_square_empty(next_square):
-            valid_moves.append(next_square)
-        else:
-            return []
+            if board.is_square_empty(next_square):
+                valid_moves.append(next_square)
+            else:
+                return []
+        candidate_square = Square.at(current_square.row + direction, current_square.col - abs(direction))
+        valid_moves += self.capture_enemies(current_square, candidate_square, direction, board)
+        candidate_square = Square.at(current_square.row + direction, current_square.col + abs(direction))
+        valid_moves += self.capture_enemies(current_square, candidate_square, direction, board)
 
         return valid_moves
 
@@ -112,27 +113,43 @@ class Rook(Piece):
     """
 
     def get_available_moves(self, board):
+        moves = self.get_vertical_moves(board)
+        moves += self.get_horizontal_moves(board)
+        return moves
+
+    def get_vertical_moves(self, board):
+        up = (1, 0)
+        up_moves = self.get_moves_in_direction(board, up)
+        down = (-1, 0)
+        down_moves = self.get_moves_in_direction(board, down)
+        return up_moves + down_moves
+
+    def get_horizontal_moves(self, board):
+        right = (0, 1)
+        up_moves = self.get_moves_in_direction(board, right)
+        left = (0, -1)
+        down_moves = self.get_moves_in_direction(board, left)
+        return up_moves + down_moves
+
+    def get_moves_in_direction(self, board, direction):
         valid_moves = []
-        current_square = self.position(board)
-        direction = 1 if self.player == Player.WHITE else -1
+        distance = 1
+        start_position = self.position(board)
 
-        if board.is_in_bounds(current_square):
-            for i in range(current_square.row, 7):
-                next_square_up = Square.at(current_square.row + i * direction, current_square.col)
-                next_square_down = Square.at(current_square.row - i * direction, current_square.col)
-                next_square_left = Square.at(current_square.row, current_square.col - i * direction)
-                next_square_right = Square.at(current_square.row, current_square.col + i * direction)
-
-                if board.is_square_empty(next_square_up) and board.is_in_bounds(next_square_up):
-                    valid_moves.append(next_square_up)
-                if board.is_square_empty(next_square_down) and board.is_in_bounds(next_square_down):
-                    valid_moves.append(next_square_down)
-                if board.is_square_empty(next_square_left) and board.is_in_bounds(next_square_left):
-                    valid_moves.append(next_square_left)
-                if board.is_square_empty(next_square_right) and board.is_in_bounds(next_square_right):
-                    valid_moves.append(next_square_right)
+        while True:
+            move_vector = (direction[0] * distance, direction[1] * distance)
+            candidate_position = start_position.translate_by(move_vector)
+            if candidate_position.is_on_board():
+                if board.is_square_empty(candidate_position):
+                    valid_moves.append(candidate_position)
+                    distance += 1
+                elif board.capture_possible(start_position, candidate_position):
+                    valid_moves.append(candidate_position)
+                    break
                 else:
-                    return []
+                    break
+            else:
+                break
         return valid_moves
 
 

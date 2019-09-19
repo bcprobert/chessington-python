@@ -65,9 +65,6 @@ class Board:
     def is_square_empty(self, square):
         return self.get_piece(square) is None
 
-    def is_in_bounds(self, square):
-        return 7 >= square.row >= 0, 7 >= square.col >= 0
-
     def find_piece(self, piece_to_find):
         """
         Searches for the given piece on the board and returns its square.
@@ -87,3 +84,8 @@ class Board:
             self.set_piece(to_square, moving_piece)
             self.set_piece(from_square, None)
             self.current_player = self.current_player.opponent()
+
+    def capture_possible(self, current_position, candidate_position):
+        if self.get_piece(current_position).player != self.get_piece(candidate_position).player:
+            return True
+        return False
