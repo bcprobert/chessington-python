@@ -3,11 +3,9 @@ A module providing a representation of a chess board. The rules of chess are not
 this is just a "dumb" board that will let you move pieces around as you like.
 """
 
-from collections import namedtuple
-from enum import Enum, auto
-
 from chessington.engine.data import Player, Square
 from chessington.engine.pieces import Pawn, Knight, Bishop, Rook, Queen, King
+from tkinter import *
 
 BOARD_SIZE = 8
 
@@ -86,14 +84,14 @@ class Board:
         moving_piece = self.get_piece(from_square)
         if moving_piece is not None and moving_piece.player == self.current_player:
             if isinstance(moving_piece, Pawn) and (to_square.row == 0 or to_square.row == 7):
-                moving_piece = Queen(self.current_player)
+                moving_piece = Queen(self.current_player)  # Pawn promotion mechanic. Automatically promotes to Queen.
             self.set_piece(to_square, moving_piece)
             self.set_piece(from_square, None)
-            self.en_passant_deletion(moving_piece, to_square, from_square)
+            self.en_passant_deletion(moving_piece, to_square)
             self.set_en_passant_state(to_square, from_square, moving_piece)
             self.current_player = self.current_player.opponent()
 
-    def en_passant_deletion(self, moving_piece, to_square, from_square):
+    def en_passant_deletion(self, moving_piece, to_square):
         if not isinstance(moving_piece, Pawn):
             return
         if moving_piece.enpassant_truefalse(self, to_square):

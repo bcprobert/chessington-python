@@ -104,7 +104,7 @@ def play_game():
             from_square = Square.at(row, col)
             to_squares = clicked_piece.get_available_moves(board)
 
-        # Otherwise reset everthing to default
+        # Otherwise reset everything to default
         else:
             from_square, to_squares = None, []
 
